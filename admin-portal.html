@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - SMIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-navy: #1e3a5f;
+            --primary-blue: #4a90a4;
+            --warm-gray: #6b7280;
+            --light-gray: #f8fafc;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --error-red: #ef4444;
+            --info-teal: #06b6d4;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .admin-hero {
+            background: linear-gradient(135deg, rgba(30, 58, 95, 0.9) 0%, rgba(74, 144, 164, 0.8) 100%),
+                        url('resources/admin-dashboard.jpg') center/cover;
+            height: 300px;
+            position: relative;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-navy), var(--primary-blue));
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .data-table {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table-header {
+            background: var(--primary-navy);
+            color: white;
+            padding: 1rem;
+            font-weight: 600;
+        }
+        
+        .table-row {
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        
+        .table-row:hover {
+            background: #f8fafc;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-purple);
+            border-radius: 2px;
+        }
+        
+        .notification-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 8px;
+            height: 8px;
+            background: var(--error-red);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .scroll-reveal {
+            opacity: 0.9;
+            transform: translateY(20px);
+            transition: all 0.6s ease;
+        }
+        
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .user-role-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .role-admin {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .role-teacher {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        
+        .role-student {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .system-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-online {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .status-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .status-offline {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .metric-trend {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .trend-up {
+            color: #16a34a;
+        }
+        
+        .trend-down {
+            color: #dc2626;
+        }
+        
+        .trend-neutral {
+            color: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-hero {
+                height: 250px;
+            }
+            
+            .data-table {
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-500 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">A</span>
+                    </div>
+                    <span class="font-display font-bold text-xl text-gray-900">SMIS Admin Portal</span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#dashboard" class="nav-link active text-gray-700 hover:text-purple-600 font-medium">Dashboard</a>
+                    <a href="#users" class="nav-link text-gray-700 hover:text-purple-600 font-medium">Users</a>
+                    <a href="#academics" class="nav-link text-gray-700 hover:text-purple-600 font-medium">Academics</a>
+                    <a href="#finance" class="nav-link text-gray-700 hover:text-purple-600 font-medium">Finance</a>
+                    <a href="#reports" class="nav-link text-gray-700 hover:text-purple-600 font-medium">Reports</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <button class="relative p-2 text-gray-600 hover:text-purple-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6l-6-6v6z"/>
+                        </svg>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <img src="https://kimi-web-img.moonshot.cn/img/yourfaceisrad.com/b5a284a9aab3d2b1906c8faeff6b226986b1fa1c.jpg" alt="Admin Avatar" class="w-8 h-8 rounded-full object-cover">
+                        <span class="hidden md:block text-sm font-medium text-gray-700">Dr. Administrator</span>
+                    </div>
+                    <button id="logoutBtn" class="text-gray-600 hover:text-red-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Hero Section -->
+    <section class="admin-hero flex items-center justify-center text-white mt-16">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">
+                Institution Management
+            </h1>
+            <p class="text-xl text-gray-200 mb-6">
+                Comprehensive administrative tools for managing your educational institution
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">1,247</div>
+                    <div class="text-gray-300 text-sm">Total Students</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">89</div>
+                    <div class="text-gray-300 text-sm">Faculty Members</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">156</div>
+                    <div class="text-gray-300 text-sm">Active Courses</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-bold text-white">$2.4M</div>
+                    <div class="text-gray-300 text-sm">Annual Revenue</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Dashboard Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- System Overview -->
+        <section id="dashboard" class="mb-8 scroll-reveal">
+            <h2 class="font-display text-2xl font-bold text-gray-900 mb-6">System Overview</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                            </svg>
+                        </div>
+                        <span class="metric-trend trend-up">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            +12%
+                        </span>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900 mb-1">1,247</div>
+                    <div class="text-gray-600 text-sm">Total Students</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                            </svg>
+                        </div>
+                        <span class="metric-trend trend-up">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            +5%
+                        </span>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900 mb-1">89</div>
+                    <div class="text-gray-600 text-sm">Faculty Members</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <span class="metric-trend trend-neutral">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            0%
+                        </span>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900 mb-1">156</div>
+                    <div class="text-gray-600 text-sm">Active Courses</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <span class="metric-trend trend-up">
+                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            +18%
+                        </span>
+                    </div>
+                    <div class="text-3xl font-bold text-gray-900 mb-1">$2.4M</div>
+                    <div class="text-gray-600 text-sm">Annual Revenue</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Grid -->
+        <div class="grid lg:grid-cols-3 gap-8">
+            <!-- Main Content -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Enrollment Trends -->
+                <section class="scroll-reveal">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="font-display text-2xl font-bold text-gray-900">Enrollment Trends</h2>
+                        <div class="flex space-x-3">
+                            <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option>Last 12 Months</option>
+                                <option>Last 6 Months</option>
+                                <option>Last 30 Days</option>
+                            </select>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+                                Export Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div id="enrollmentChart" style="height: 400px;"></div>
+                    </div>
+                </section>
+
+                <!-- Recent Activity -->
+                <section class="scroll-reveal">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="font-display text-2xl font-bold text-gray-900">Recent Activity</h2>
+                        <button class="text-purple-600 hover:text-purple-700 font-medium">View All</button>
+                    </div>
+                    
+                    <div class="data-table">
+                        <div class="table-header grid grid-cols-4 gap-4">
+                            <div>Time</div>
+                            <div>User</div>
+                            <div>Action</div>
+                            <div>Details</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-4 gap-4 p-4">
+                            <div class="text-sm text-gray-600">2 min ago</div>
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/2b1c291e19c00d5d39be2d03f97e53a18e978f40.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Jane Doe</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Login</span>
+                            </div>
+                            <div class="text-sm text-gray-600">Student portal access</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-4 gap-4 p-4">
+                            <div class="text-sm text-gray-600">5 min ago</div>
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/studiojphotography.ca/33398a9b8e8c2d7a80cbfa44f06d6165a958aa5b.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Prof. Johnson</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Grade Entry</span>
+                            </div>
+                            <div class="text-sm text-gray-600">CS 101 - 36 students</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-4 gap-4 p-4">
+                            <div class="text-sm text-gray-600">12 min ago</div>
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/yourfaceisrad.com/b5a284a9aab3d2b1906c8faeff6b226986b1fa1c.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Admin User</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="inline-block bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">User Created</span>
+                            </div>
+                            <div class="text-sm text-gray-600">New teacher account</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-4 gap-4 p-4">
+                            <div class="text-sm text-gray-600">18 min ago</div>
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/www.ldatschool.ca/ad60af8d238faab3727c7739dc16e3f593cfdeae.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Bob Chen</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="inline-block bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Assignment</span>
+                            </div>
+                            <div class="text-sm text-gray-600">Submitted CS 201 Project</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-4 gap-4 p-4">
+                            <div class="text-sm text-gray-600">25 min ago</div>
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/97e53ed73a1f89a3b8829217ed10dbea9708e6c5.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Carol Davis</span>
+                            </div>
+                            <div class="text-sm">
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Payment</span>
+                            </div>
+                            <div class="text-sm text-gray-600">Tuition fee paid</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-8">
+                <!-- System Health -->
+                <section class="scroll-reveal">
+                    <h2 class="font-display text-xl font-bold text-gray-900 mb-4">System Health</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-gray-700 font-medium">Database Server</span>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600">Response time: 45ms</div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-gray-700 font-medium">Web Server</span>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600">Uptime: 99.8%</div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-gray-700 font-medium">Email Service</span>
+                                <span class="system-status status-warning">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Warning
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600">Queue: 156 messages</div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl p-4 shadow-sm">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-gray-700 font-medium">Backup System</span>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Online
+                                </span>
+                            </div>
+                            <div class="text-sm text-gray-600">Last backup: 2 hours ago</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- User Management -->
+                <section id="users" class="scroll-reveal">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-display text-xl font-bold text-gray-900">User Management</h2>
+                        <button class="text-purple-600 hover:text-purple-700 text-sm font-medium">View All</button>
+                    </div>
+                    
+                    <div class="data-table">
+                        <div class="table-header grid grid-cols-3 gap-4">
+                            <div>Name</div>
+                            <div>Role</div>
+                            <div>Status</div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-3 gap-4 p-4">
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/2b1c291e19c00d5d39be2d03f97e53a18e978f40.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Jane Doe</span>
+                            </div>
+                            <div>
+                                <span class="user-role-badge role-student">Student</span>
+                            </div>
+                            <div>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Active
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-3 gap-4 p-4">
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/studiojphotography.ca/33398a9b8e8c2d7a80cbfa44f06d6165a958aa5b.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Prof. Johnson</span>
+                            </div>
+                            <div>
+                                <span class="user-role-badge role-teacher">Teacher</span>
+                            </div>
+                            <div>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Active
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="table-row grid grid-cols-3 gap-4 p-4">
+                            <div class="flex items-center space-x-2">
+                                <img src="https://kimi-web-img.moonshot.cn/img/yourfaceisrad.com/b5a284a9aab3d2b1906c8faeff6b226986b1fa1c.jpg" alt="User" class="w-6 h-6 rounded-full object-cover">
+                                <span class="text-sm font-medium">Dr. Admin</span>
+                            </div>
+                            <div>
+                                <span class="user-role-badge role-admin">Admin</span>
+                            </div>
+                            <div>
+                                <span class="system-status status-online">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Active
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <button class="w-full bg-purple-600 text-white py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors">
+                            Add New User
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Financial Overview -->
+                <section id="finance" class="scroll-reveal">
+                    <h2 class="font-display text-xl font-bold text-gray-900 mb-4">Financial Overview</h2>
+                    
+                    <div class="chart-container">
+                        <div id="revenueChart" style="height: 250px;"></div>
+                    </div>
+                    
+                    <div class="mt-6 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Monthly Revenue</span>
+                            <span class="font-semibold text-green-600">$205,000</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Outstanding Fees</span>
+                            <span class="font-semibold text-red-600">$18,500</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-700">Collection Rate</span>
+                            <span class="font-semibold text-blue-600">92.3%</span>
+                        </div>
+                        <div class="pt-3 border-t border-gray-200">
+                            <button class="w-full bg-purple-600 text-white py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors">
+                                Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Actions -->
+                <section class="scroll-reveal">
+                    <h2 class="font-display text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full flex items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <svg class="w-5 h-5 text-purple-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Create User Account</span>
+                        </button>
+                        
+                        <button class="w-full flex items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <svg class="w-5 h-5 text-purple-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Schedule Backup</span>
+                        </button>
+                        
+                        <button class="w-full flex items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <svg class="w-5 h-5 text-purple-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                            </svg>
+                            <span class="font-medium">Send Announcement</span>
+                        </button>
+                        
+                        <button class="w-full flex items-center justify-center p-3 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                            <svg class="w-5 h-5 text-purple-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">Generate Report</span>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Initialize admin portal functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Scroll reveal animation
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.scroll-reveal').forEach(el => {
+                observer.observe(el);
+            });
+
+            // Initialize enrollment trends chart
+            const enrollmentChart = echarts.init(document.getElementById('enrollmentChart'));
+            const enrollmentOption = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['New Students', 'Graduated', 'Transferred']
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                },
+                yAxis: {
+                    type: 'value'
+                },
+                series: [
+                    {
+                        name: 'New Students',
+                        type: 'line',
+                        stack: 'Total',
+                        data: [45, 32, 28, 25, 18, 12, 8, 156, 89, 67, 43, 38],
+                        itemStyle: { color: '#4a90a4' }
+                    },
+                    {
+                        name: 'Graduated',
+                        type: 'line',
+                        stack: 'Total',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 234],
+                        itemStyle: { color: '#10b981' }
+                    },
+                    {
+                        name: 'Transferred',
+                        type: 'line',
+                        stack: 'Total',
+                        data: [3, 5, 2, 4, 6, 3, 2, 8, 5, 4, 3, 6],
+                        itemStyle: { color: '#ef4444' }
+                    }
+                ]
+            };
+            enrollmentChart.setOption(enrollmentOption);
+
+            // Initialize revenue chart
+            const revenueChart = echarts.init(document.getElementById('revenueChart'));
+            const revenueOption = {
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    orient: 'horizontal',
+                    bottom: '0%'
+                },
+                series: [
+                    {
+                        name: 'Revenue Sources',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: '18',
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: [
+                            { value: 65, name: 'Tuition Fees' },
+                            { value: 20, name: 'Registration' },
+                            { value: 10, name: 'Other Fees' },
+                            { value: 5, name: 'Donations' }
+                        ],
+                        itemStyle: {
+                            color: function(params) {
+                                const colors = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b'];
+                                return colors[params.dataIndex];
+                            }
+                        }
+                    }
+                ]
+            };
+            revenueChart.setOption(revenueOption);
+
+            // Stat card hover effects
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    anime({
+                        targets: card,
+                        translateY: -4,
+                        scale: 1.02,
+                        duration: 300,
+                        easing: 'easeOutQuad'
+                    });
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    anime({
+                        targets: card,
+                        translateY: 0,
+                        scale: 1,
+                        duration: 300,
+                        easing: 'easeOutQuad'
+                    });
+                });
+            });
+
+            // Quick action buttons
+            document.querySelectorAll('.card-hover').forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.querySelector('h3').textContent;
+                    showNotification(`${action} feature coming soon!`, 'info');
+                });
+            });
+
+            // Quick action buttons in sidebar
+            document.querySelectorAll('button[class*="border-2"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.querySelector('span').textContent;
+                    showNotification(`${action} feature activated!`, 'success');
+                });
+            });
+
+            // Logout functionality
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to logout?')) {
+                    window.location.href = 'index.html';
+                }
+            });
+
+            // Notification system
+            function showNotification(message, type = 'info') {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-20 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform translate-x-full transition-transform duration-300`;
+                
+                const colors = {
+                    info: 'bg-purple-500 text-white',
+                    success: 'bg-green-500 text-white',
+                    warning: 'bg-yellow-500 text-black',
+                    error: 'bg-red-500 text-white'
+                };
+
+                notification.className += ` ${colors[type]}`;
+                notification.textContent = message;
+
+                document.body.appendChild(notification);
+
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(0)';
+                }, 10);
+
+                setTimeout(() => {
+                    notification.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        document.body.removeChild(notification);
+                    }, 300);
+                }, 3000);
+            }
+
+            // Simulate real-time system monitoring
+            setInterval(() => {
+                const statusElements = document.querySelectorAll('.system-status');
+                statusElements.forEach(element => {
+                    // Randomly update system status for demonstration
+                    if (Math.random() < 0.1) { // 10% chance to update
+                        const statuses = ['status-online', 'status-warning', 'status-offline'];
+                        const currentStatus = statuses.find(status => element.classList.contains(status));
+                        const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                        
+                        if (currentStatus !== newStatus) {
+                            element.classList.remove(currentStatus);
+                            element.classList.add(newStatus);
+                            
+                            // Update status text and icon
+                            const icon = element.querySelector('svg');
+                            const text = element.textContent.trim();
+                            
+                            if (newStatus === 'status-online') {
+                                element.innerHTML = `
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Online
+                                `;
+                            } else if (newStatus === 'status-warning') {
+                                element.innerHTML = `
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Warning
+                                `;
+                            } else {
+                                element.innerHTML = `
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 8 8">
+                                        <circle cx="4" cy="4" r="3"/>
+                                    </svg>
+                                    Offline
+                                `;
+                            }
+                        }
+                    }
+                });
+            }, 5000);
+
+            // Resize charts on window resize
+            window.addEventListener('resize', () => {
+                enrollmentChart.resize();
+                revenueChart.resize();
+            });
+        });
+    </script>
+</body>
+</html>
